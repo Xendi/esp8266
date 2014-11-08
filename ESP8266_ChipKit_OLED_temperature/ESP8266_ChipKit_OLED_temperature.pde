@@ -241,6 +241,8 @@ boolean addToStream(String temp) {
 
   Serial.println("Data posted!");
    
+  echoCommand("AT+CIPCLOSE", "", CONTINUE); 
+   
   return true;
 }
  
