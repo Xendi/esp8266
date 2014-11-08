@@ -30,14 +30,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
 
-#define SSID        "yourssid"
-#define PASS        "yourwifipass" // My luggage has the same combination!
+#define SSID        "hackmanhattan"
+#define PASS        "" // My luggage has the same combination!
 #define DEST_HOST   "data.sparkfun.com"
 #define TIMEOUT     5000 // mS
 #define CONTINUE    false
 #define HALT        true
-#define PUBLIC_KEY "yourpublickey" //data.sparkfun.com public key
-#define PRIVATE_KEY "yourprivatekey" //data.sparkfun.com private key
+#define PUBLIC_KEY "" //data.sparkfun.com public key
+#define PRIVATE_KEY "" //data.sparkfun.com private key
 
 #include <IOShieldOled.h>   // Basic IO shield
 #include <IOShieldTemp.h>   // Basic IO shield
@@ -196,7 +196,14 @@ String ftoa(float number, uint8_t precision, uint8_t size) {
 boolean connectService(String service, int port) {  
   String serviceConnect = "AT+CIPSTART=\"TCP\",\"" + service + "\"," + port;
 //  Serial.println(serviceConnect);
-  while (!echoCommand(serviceConnect, "Linked", CONTINUE)) {};
+  if (!echoCommand(serviceConnect, "Linked", CONTINUE)) {
+    if (echoCommand(serviceConnect, "ALREAY CONNECT", CONTINUE)){
+    echoCommand("AT+CIPCLOSE", "", CONTINUE);
+    delay(2000);
+    }
+    delay(2000);
+    return false;
+  }
   delay(2000);
   return true;
  
@@ -238,10 +245,10 @@ boolean addToStream(String temp) {
   
 // Send the raw HTTP request
   if(!echoCommand(toSend,"1 Success", CONTINUE)) return false;  // GET
-
+  
   Serial.println("Data posted!");
-   
-  echoCommand("AT+CIPCLOSE", "", CONTINUE); 
+
+//  echoCommand("AT+CIPCLOSE", "", CONTINUE);
    
   return true;
 }
