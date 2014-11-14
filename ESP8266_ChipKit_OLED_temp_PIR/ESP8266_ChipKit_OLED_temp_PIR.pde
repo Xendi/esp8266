@@ -36,8 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TIMEOUT     5000 // mS
 #define CONTINUE    false
 #define HALT        true
-#define PUBLIC_KEY "" //data.sparkfun.com public key
-#define PRIVATE_KEY "" //data.sparkfun.com private key
+#define PUBLIC_KEY "4JQbDmYQyQtl9b7KobNM" //data.sparkfun.com public key
+#define PRIVATE_KEY "b5pVWjGpmpcPjWK1AWJ0" //data.sparkfun.com private key
 
 #include <IOShieldOled.h>   // Basic IO shield
 #include <IOShieldTemp.h>   // Basic IO shield
@@ -77,7 +77,7 @@ boolean echoFind(String keyword)
   byte keyword_length = keyword.length();
   
   // Fail if the target string has not been sent by deadline.
-  long deadline = millis() + TIMEOUT;
+  unsigned long deadline = millis() + TIMEOUT;
   while(millis() < deadline)
   {
     if (mySerial.available())
@@ -334,7 +334,7 @@ void setup()  {
 
   
   // Fail if the target string has not been sent by deadline.
-  long deadline = millis() + TIMEOUT;
+  unsigned long deadline = millis() + TIMEOUT;
   while(millis() < deadline)
   {
     if (mySerial.available())
@@ -400,10 +400,10 @@ void loop()
   
 // Count # of pir sensor activations in 1 minute
 
-  int start = millis();
+  unsigned long start = millis();
   pirCounter = 0;
   
-  while (!((millis()-start) > 60000)) {    
+  while ((millis()-start) < 60000) {    
      // read the pushbutton input pin:
   pirState = digitalRead(pirPin);
 
