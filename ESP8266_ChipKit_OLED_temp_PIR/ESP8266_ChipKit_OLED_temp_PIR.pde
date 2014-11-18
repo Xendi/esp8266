@@ -138,7 +138,7 @@ boolean echoCommand(String cmd, String ack, boolean halt_on_fail)
 // Connect to the specified wireless network.
 boolean connectWiFi()
 {
-  String cmd = "AT+CWJAP=\""; cmd += SSID; cmd += "\",\""; cmd += PASS; cmd += "\"";
+  String cmd = "AT+CWJAP=\"" SSID "\",\"" PASS "\"";
   if (echoCommand(cmd, "OK", CONTINUE)) // Join Access Point
   {
     Serial.println("Connected to WiFi.");
@@ -186,10 +186,7 @@ boolean addToStream(String temp, String pircount) {
 
  
 // Build HTTP request.
-  String toSend = "GET /input/";
-  toSend += PUBLIC_KEY;
-  toSend +="?private_key=";
-  toSend += PRIVATE_KEY;
+  String toSend = "GET /input/" PUBLIC_KEY "?private_key=" PRIVATE_KEY;
   toSend += "&temp_c=" + temp;  
   //toSend += "&temp_f=" + temperature2_chr;
   //toSend += "&temp_c2=" + c_temp2;
@@ -248,7 +245,7 @@ String ftoa(float number, uint8_t precision, uint8_t size) {
   s += String(uint16_t(number));  // prints the integer part
 
   if(precision > 0) {
-    s += ".";                // prints the decimal point
+    s += ".";                     // prints the decimal point
     uint32_t frac;
     uint32_t mult = 1;
     uint8_t padding = precision -1;
@@ -366,17 +363,17 @@ void loop()
   delay(5000);
  
   float tempF, tempC;
-  tempC = IOShieldTemp.getTemp();         //Get Temperature in Celsius.
+  tempC = IOShieldTemp.getTemp();         // Get Temperature in Celsius.
   tempF = IOShieldTemp.convCtoF(tempC);   // Convert the result to Fahrenheit.
 
-  Serial.print(tempC);                    //Print Temperature to serial port
+  Serial.print(tempC);                    // Print Temperature to serial port
   Serial.println(" C, ");
   Serial.print(tempF);
   Serial.println(" F");
   delay(1000);  
   
     
-  //Construct temperature strings and output to OLED display
+  // Construct temperature strings and output to OLED display
   
 
   String temperature_str = "";                        //Celsius  
