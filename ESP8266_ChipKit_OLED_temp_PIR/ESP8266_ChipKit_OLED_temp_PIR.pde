@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CONTINUE    false
 #define HALT        true
 #define PUBLIC_KEY "4JQbDmYQyQtl9b7KobNM" //data.sparkfun.com public key
-#define PRIVATE_KEY "b5pVWjGpmpcPjWK1AWJ0" //data.sparkfun.com private key
+#define PRIVATE_KEY "" //data.sparkfun.com private key
 
 #include <IOShieldOled.h>   // Basic IO shield
 #include <IOShieldTemp.h>   // Basic IO shield
@@ -46,6 +46,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Timer.h>          // must change ring buffer size to 128 in Majenko's libraries
 
 #include <Wire.h>
+
+#define RESET 35
+#define LED 31
 
 // define a soft serial port (RX, TX) for ESP8266
 #define SERIAL_IN 33        // Pin 33 connected to ESP8266 TX pin
@@ -194,7 +197,7 @@ String ftoa(float number, uint8_t precision, uint8_t size) {
 
   if (size>0)                // checks size
     if (s.length()>size)        return("#");
-    else while(s.length()<size) s = " "+s;
+    else while(s.length()<size) s = "0"+s;
 
   return s;
 }
@@ -273,6 +276,15 @@ void blinker(int repeat, int speed) {
  
 }
 
+void reset()
+{
+  digitalWrite(RESET,LOW);
+  digitalWrite(LED,HIGH);
+  delay(1000);
+  digitalWrite(RESET,HIGH);
+  digitalWrite(LED,LOW);
+}
+
 // ******** SETUP ********
 void setup()  {
 
@@ -281,6 +293,7 @@ void setup()  {
 
   pinMode(pirPin, INPUT);      // initialize pir sensor pin
   
+  pinMode(LED, OUTPUT);        // Reset LED
 
   Serial.begin(9600);          // Communication with PC monitor via USB
   mySerial.begin(9600);        // Communication with ESP8266 via 5V/3.3V level shifter
@@ -298,10 +311,12 @@ void setup()  {
 //  mySerial.setTimeout(TIMEOUT);
   Serial.println("ESP8266 Temperature Monitor");
   
-  delay(2000);
+  reset();
+  
+  delay(5000);
 
   echoCommand("AT+RST", "Ready", HALT);    // Reset & test if the module is ready  
-  delay(6000);
+  delay(5000);
   Serial.println("Module is ready.");
   echoCommand("AT+GMR", "OK", CONTINUE);   // Retrieves the firmware ID (version number) of the module. 
   echoCommand("AT+CWMODE?","OK", CONTINUE);// Get module access mode. 
@@ -351,6 +366,9 @@ void setup()  {
 void loop() 
 {
 
+ reset();
+ delay(5000);
+ 
  float tempF, tempC;
   
   //Get Temperature in Celsius.
@@ -436,7 +454,7 @@ void loop()
 
   while(!addToStream(temperature_chr, pir));
 
-  delay(10000);
+  delay(1000);
  
 }
 
