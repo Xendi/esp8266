@@ -37,11 +37,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CONTINUE    false
 #define HALT        true
 #define PUBLIC_KEY "4JQbDmYQyQtl9b7KobNM" //data.sparkfun.com public key
-#define PRIVATE_KEY "" //data.sparkfun.com private key
+#define PRIVATE_KEY "b5pVWjGpmpcPjWK1AWJ0" //data.sparkfun.com private key
 
 #include <IOShieldOled.h>   // Basic IO shield
 #include <IOShieldTemp.h>   // Basic IO shield
-
 #include <TimerSerial.h>    // must change ring buffer size to 128 in Majenko's libraries
 #include <Timer.h>          // must change ring buffer size to 128 in Majenko's libraries
 
@@ -207,12 +206,8 @@ boolean connectService(String service, int port) {
 //  Serial.println(serviceConnect);
   if (!echoCommand(serviceConnect, "Linked", CONTINUE)) {
     if (echoCommand(serviceConnect, "ALREAY CONNECT", CONTINUE)){
-      echoCommand("AT+CIPCLOSE", "", CONTINUE);
-      delay(2000);
-    }
-    if (echoCommand(serviceConnect, "busy p...", CONTINUE)) {
-      reset();
-      delay(5000);
+    echoCommand("AT+CIPCLOSE", "", CONTINUE);
+    delay(2000);
     }
     delay(2000);
     return false;
