@@ -311,6 +311,8 @@ void setup()  {
 
   echoCommand("AT+RST", "Ready", HALT);    // Reset & test if the module is ready  
   delay(5000);
+  echoCommand("AT+CSYSWDTENABLE", "WDT Enabled", HALT);
+  delay(500);
   Serial.println("Module is ready.");
   
   echoCommand("AT+GMR", "OK", CONTINUE);   // Retrieves the firmware ID (version number) of the module. 
