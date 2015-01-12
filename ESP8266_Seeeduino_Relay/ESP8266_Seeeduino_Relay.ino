@@ -82,17 +82,18 @@ void setup()  {
   
   Serial.println("Chip Enabled");
   
-  
+  reset();
   delay(5000);                             // wait for reset to complete
   
   Serial.println("Module is ready.");
   
-  reset();
+
 }
 
 //                               ******** LOOP ********
 void loop() 
 {
+  
   if (Serial.available() > 0) {char ch = Serial.read(); mySerial.print(ch);}
   
   if (mySerial.available() > 0) {char ch = mySerial.read(); Serial.print(ch);}
