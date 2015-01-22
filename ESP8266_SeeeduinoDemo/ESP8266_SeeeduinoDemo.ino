@@ -137,22 +137,22 @@ void setup()
 
   Serial.println("Enabling Module");
   
-  pinMode(RESET, OUTPUT);
-  pinMode(RST, OUTPUT);
-  pinMode(GPIO0, OUTPUT);
+//  pinMode(RESET, OUTPUT);
+//  pinMode(RST, OUTPUT);
+//  pinMode(GPIO0, OUTPUT);
   digitalWrite(RST, 1);
   digitalWrite(GPIO0, 1);
   
   reset();
   
   echoCommand("AT+CSYSWDTENABLE", "WDT Enabled", HALT);
-  delay(500);
+  delay(5000);
   
 //  mySerial.setTimeout(TIMEOUT);
   
-  echoCommand("AT+RST", "ready", HALT);    // Reset & test if the module is ready  
+  echoCommand("AT+RST", "OK", HALT);    // Reset & test if the module is ready  
   Serial.println("Module is ready.");
-  delay(1000);
+  delay(5000);
   
   echoCommand("AT+GMR", "OK", CONTINUE);   // Retrieves the firmware ID (version number) of the module. 
   delay(1000);

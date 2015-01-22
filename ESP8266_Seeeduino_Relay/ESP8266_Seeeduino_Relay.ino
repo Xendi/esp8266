@@ -71,9 +71,9 @@ void setup()  {
 
   Serial.println("Enabling Module");
   
-  pinMode(RESET, OUTPUT);
-  pinMode(RST, OUTPUT);
-  pinMode(GPIO0, OUTPUT);
+//  pinMode(RESET, OUTPUT);
+//  pinMode(RST, OUTPUT);
+//  pinMode(GPIO0, OUTPUT);
   digitalWrite(RST, 1);       // Enable RST pin
   digitalWrite(GPIO0, 1);     // Enable GPIO1 pin to prevent bootloader mode
   digitalWrite(RESET, 1);     // Enable CH_PD pin
