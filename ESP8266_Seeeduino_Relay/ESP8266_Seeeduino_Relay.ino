@@ -78,12 +78,12 @@ void setup()  {
   digitalWrite(GPIO0, 1);     // Enable GPIO1 pin to prevent bootloader mode
   digitalWrite(RESET, 1);     // Enable CH_PD pin
   
-  delay(2000);                // wait for chip enable
+//  delay(2000);                // wait for chip enable
   
   Serial.println("Chip Enabled");
   
-  reset();
-  delay(5000);                             // wait for reset to complete
+//  reset();
+//  delay(1000);                             // wait for reset to complete
   
   Serial.println("Module is ready.");
   

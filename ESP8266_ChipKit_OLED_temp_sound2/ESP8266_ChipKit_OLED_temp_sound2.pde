@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CONTINUE    false
 #define HALT        true
 #define PUBLIC_KEY "lz92WJpE5jc76wm8ZdxE" //data.sparkfun.com public key
-#define PRIVATE_KEY "El8YoMENwXCKEmvV1WXn"      //data.sparkfun.com private key
+#define PRIVATE_KEY ""      //data.sparkfun.com private key
 #define RESET 27            // CH_PD pin
 #define LED 31
 
@@ -273,7 +273,7 @@ void reset()
 //                                         ******** SETUP ********
 void setup()  {
 
-  pinMode(RESET, OUTPUT);         // If using IO shield, set SW4(35) to OFF
+//  pinMode(RESET, OUTPUT);         // If using IO shield, set SW4(35) to OFF
   digitalWrite(RESET, HIGH);      // Set CH_PD high to enable ESP8266
 
 //  pinMode(pirPin, INPUT);      // initialize pir sensor pin

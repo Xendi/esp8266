@@ -37,9 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TIMEOUT     5000    // mS
 #define CONTINUE    false
 #define HALT        true
-#define PUBLIC_KEY "4JQbDmYQyQtl9b7KobNM" //data.sparkfun.com public key
+#define PUBLIC_KEY "4JQbDmYQyQtl9b7KobNM"       //data.sparkfun.com public key
 #define PRIVATE_KEY ""      //data.sparkfun.com private key
-#define RESET 35            // CH_PD pin
+#define RESET 28                                // CH_PD pin
 #define LED 31
 
 // define a soft serial port (RX, TX) for ESP8266
@@ -129,7 +129,8 @@ boolean echoCommand(String cmd, String ack, boolean halt_on_fail)
     // Otherwise wait for ack.
     if (!echoFind(ack))          // timed out waiting for ack string 
       if (halt_on_fail)
-        errorHalt(cmd+" failed");// Critical failure halt.
+//        errorHalt(cmd+" failed");// Critical failure halt.
+          reset();
       else
         return false;            // Let the caller handle it.
   return true;                   // ack blank or ack found
@@ -161,7 +162,7 @@ boolean connectService(String service, int port) {
       echoCommand("AT+CIPCLOSE", "", CONTINUE);
       delay(2000);
     }
-    if (echoCommand(serviceConnect, "busy p...", CONTINUE)) {
+    if (echoCommand(serviceConnect, "busy", CONTINUE)) {
       reset();
       delay(5000);
     }
@@ -282,8 +283,8 @@ void reset()
 //                                         ******** SETUP ********
 void setup()  {
 
-  pinMode(35, OUTPUT);         // If using IO shield, set SW4(35) to OFF
-  digitalWrite(35, HIGH);      // Set CH_PD high to enable ESP8266
+  pinMode(RESET, OUTPUT);         // If using IO shield, set SW4(35) to OFF
+  digitalWrite(RESET, HIGH);      // Set CH_PD high to enable ESP8266
 
   pinMode(pirPin, INPUT);      // initialize pir sensor pin
   
@@ -317,8 +318,8 @@ void setup()  {
   
   echoCommand("AT+GMR", "OK", CONTINUE);   // Retrieves the firmware ID (version number) of the module. 
   echoCommand("AT+CWMODE?","OK", CONTINUE);// Get module access mode. 
-  echoCommand("AT+CWMODE=1", "", HALT);    // Station mode
-  echoCommand("AT+CIPMUX=0", "", HALT);    // Allow one connection
+  echoCommand("AT+CWMODE=1", "", CONTINUE);    // Station mode
+  echoCommand("AT+CIPMUX=0", "", CONTINUE);    // Allow one connection
 
   //connect to the wifi
   boolean connection_established = false;
