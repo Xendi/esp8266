@@ -1,16 +1,6 @@
-/* ESP8266 connected to Seeeduino in 3V3 mode
-
-// ESP8266:Arduino -> RST:5, GPIO0:6, CH_PD:7, UTXD:8, URXD:9
-
-// ESP8266 pinout (from above, antenna to right:
-// UTXD    GND
-// CH_PD   GPIO2
-// RST     GPIO0
-// VCC     URXD
+/* Cactus Micro with attached ESP8266 ESP-11 module.
 
 // will work only with ESP8266 firmware 0.9.2.2 or higher
-// needs AltSoftSerial library for reliable comms http://www.pjrc.com/teensy/td_libs_AltSoftSerial.html
-
    
   Adapted from:
   'ESP8266 Retro Browser' - [TM] (http://hackaday.io/project/3072-esp8266-retro-browser)
@@ -18,8 +8,6 @@
 
   David Reeves 2015
   CC NC-SA
-  
-
   
   
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -41,8 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TIMEOUT     5000    // mS
 #define CONTINUE    false
 #define HALT        true
-#define BUCKET_KEY "esp82662" //InitialState bucket key
-#define BUCKET_NAME "cactustest2" //InitialState bucket name
+#define BUCKET_KEY "esp8266_3" //InitialState bucket key
+#define BUCKET_NAME "cactustest3" //InitialState bucket name
 #define STREAM_KEY "dBV3uHArQF92BneXRlEykNlTZS279PVQ"      //InitialState private key
 #define RESET 13            // CH_PD pin
 #define GPIO0 5           // GPIO0
