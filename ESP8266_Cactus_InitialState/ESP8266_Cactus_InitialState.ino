@@ -42,13 +42,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CONTINUE    false
 #define HALT        true
 #define BUCKET_KEY "esp82662" //InitialState bucket key
+#define BUCKET_NAME "cactustest2" //InitialState bucket name
 #define STREAM_KEY "dBV3uHArQF92BneXRlEykNlTZS279PVQ"      //InitialState private key
 #define RESET 13            // CH_PD pin
 #define GPIO0 5           // GPIO0
 #define RST 5              // RST
-#define SERIAL_IN 8        // Pin 8 connected to ESP8266 TX pin
-#define SERIAL_OUT 9       // Pin 9 connected to ESP8266 RX pin
-
 
 
 //#define ECHO_COMMANDS // Un-comment to echo AT+ commands to serial monitor
@@ -183,17 +181,13 @@ boolean createBucket () {
   toSend +="Accept-Version: ~0\r\n";
   toSend +="X-IS-AccessKey: "STREAM_KEY"\r\n";
   toSend +="Content-Type: application/json\r\n";
- 
-
   String payload ="{\"bucketKey\": \""BUCKET_KEY "\","; 
-  payload +="\"bucketName\": \"cactusTest2\"}";
+  payload +="\"bucketName\": \""BUCKET_NAME"\"}";
   payload +="\r\n"; 
   toSend += "Content-Length: "+String(payload.length())+"\r\n";
   toSend += "\r\n";
   toSend += payload;
   
-
-
    Serial.println(toSend);
  // Ready the module to receive raw data
   if (!echoCommand("AT+CIPSEND="+String(toSend.length()), ">", CONTINUE))
@@ -233,14 +227,14 @@ boolean addToStream(String temp) {
   toSend +="Accept-Version: ~0\r\n";
   toSend +="X-IS-AccessKey:  " STREAM_KEY "\r\n";
   toSend +="X-IS-BucketKey:  " BUCKET_KEY "\r\n";
-  
   String payload ="[{\"key\": \"TestA0\", "; 
   payload +="\"value\": \"" + temp + "\"}]";
   payload +="\r\n"; 
   toSend += "Content-Length: "+String(payload.length())+"\r\n";
   toSend += "\r\n";
   toSend += payload;
-   Serial.println(toSend);
+  
+  Serial.println(toSend);
  // Ready the module to receive raw data
   if (!echoCommand("AT+CIPSEND="+String(toSend.length()), ">", CONTINUE))
   {
@@ -330,7 +324,7 @@ void setup()  {
   Serial.begin(9600);         // Communication with PC monitor via USB
   Serial1.begin(9600);       // Communication with ESP8266 (3V3!)
   
-  Serial.println("ESP8266/Seeeduino DataLogger");
+  Serial.println("Cactus Micro/InitialState DataLogger");
 
   Serial.println("Enabling Module");
   
