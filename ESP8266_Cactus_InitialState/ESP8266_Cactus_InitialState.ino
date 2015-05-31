@@ -1,5 +1,8 @@
 /* Cactus Micro with attached ESP8266 ESP-11 module.
 
+This sketch uses hardware serial, so be sure to make the jumper connection as shown on 
+the board itself, or at wiki.aprbrother.com/wiki/Cactus_Micro
+
 // will work only with ESP8266 firmware 0.9.2.2 or higher
    
   Adapted from:
