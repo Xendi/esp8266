@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TIMEOUT     5000    // mS
 #define CONTINUE    false
 #define HALT        true
-#define BUCKET_KEY "esp8266_4" //InitialState bucket key
+#define BUCKET_KEY "esp8266_5" //InitialState bucket key
 #define BUCKET_NAME "cactusTemp" //InitialState bucket name
 #define STREAM_KEY ""      //InitialState private key
 #define RESET 13            // CH_PD pin
@@ -239,7 +239,7 @@ boolean addToStream(String temp) {
   toSend +="Accept-Version: ~0\r\n";
   toSend +="X-IS-AccessKey:  " STREAM_KEY "\r\n";
   toSend +="X-IS-BucketKey:  " BUCKET_KEY "\r\n";
-  String payload ="[{\"key\": \"TestA0\", "; 
+  String payload ="[{\"key\": \"Temperature\", "; 
   payload +="\"value\": \"" + temp + "\"}]";
   payload +="\r\n"; 
   toSend += "Content-Length: "+String(payload.length())+"\r\n";
@@ -438,7 +438,7 @@ void loop()
   // Construct output string   
 
   String temperature_str = "";                        //Celsius  
-  temperature_str += ftoa(tempC, 0, 4);
+  temperature_str += ftoa(tempC, 2, 5);
   //temperature_str += "C";
   char temperature_chr[temperature_str.length()+1];   //create char buffer
   temperature_str.toCharArray(temperature_chr, temperature_str.length()+1); //convert to char
@@ -449,7 +449,7 @@ void loop()
    
   while(!addToStream(temperature_chr));   
 
-  delay(50000);
+  delay(30000);
  
 }
 
