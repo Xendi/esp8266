@@ -5,6 +5,7 @@ the board itself, or at wiki.aprbrother.com/wiki/Cactus_Micro
 
 // will work only with ESP8266 firmware 0.9.2.2 or higher
    
+   
   Adapted from:
   'ESP8266 Retro Browser' - [TM] (http://hackaday.io/project/3072-esp8266-retro-browser)
   'Wifi meat thermometer' - bluesunit (http://www.reddit.com/r/arduino/comments/2kmgvg/wifi_meat_thermometer_with_trinket_esp8266/)
@@ -34,10 +35,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define HALT        true
 #define BUCKET_KEY "esp8266_4" //InitialState bucket key
 #define BUCKET_NAME "cactusTemp" //InitialState bucket name
-#define STREAM_KEY "dBV3uHArQF92BneXRlEykNlTZS279PVQ"      //InitialState private key
+#define STREAM_KEY ""      //InitialState private key
 #define RESET 13            // CH_PD pin
 #define GPIO0 5           // GPIO0
 #define RST 5              // RST
+
+
+// VCC---Series resistor (180K) ---A0---Thermistor (100K NTC)---GND
 
 // which analog pin to connect
 #define THERMISTORPIN A0         
