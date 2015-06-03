@@ -35,8 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
 
-#define SSID        "Bergen-Guest"
-#define PASS        "GuestDevice"      // My luggage has the same combination!
+#define SSID        "hackmanhattan"
+#define PASS        ""      // My luggage has the same combination!
 #define DEST_HOST   "data.sparkfun.com"
 #define TIMEOUT     5000    // mS
 #define CONTINUE    false

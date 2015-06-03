@@ -26,7 +26,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
 
-#define SSID        "Marlowe24"
+#define SSID        "hackmanhattan"
 #define PASS        ""      // My luggage has the same combination!
 #define DEST_HOST   "insecure-groker.initialstate.com"
 #define TIMEOUT     5000    // mS
@@ -343,8 +343,7 @@ void setup()  {
   // Set up connection modes
   
   echoCommand("AT+GMR", "OK", CONTINUE);   // Retrieves the firmware ID (version number) of the module. 
-  echoCommand("AT+CWMODE?","OK", CONTINUE);// Get module access mode. 
-  echoCommand("AT+CWMODE=1", "", HALT);    // Station mode
+  echoCommand("AT+CWMODE=3", "", HALT);    // Station mode
   echoCommand("AT+CIPMUX=1", "", HALT);    // Allow one connection
 
   //connect to the wifi

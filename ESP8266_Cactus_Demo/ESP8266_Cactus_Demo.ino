@@ -1,12 +1,4 @@
-// ESP8266 connected to Seeeduino in 3V3 mode
-
-// ESP8266:Arduino -> RST:5, GPIO0:6, CH_PD:7, UTXD:8, URXD:9
-
-// ESP8266 pinout (from above, antenna to right:
-// UTXD    GND
-// CH_PD   GPIO2
-// RST     GPIO0
-// VCC     URXD
+// Cactus Micro with ESP-11. Set jumper for hardware serial!
 
 // modified from code by TM at http://hackaday.io/project/3072-esp8266-retro-browser
 // will work only with ESP8266 firmware 0.9.2.2 or higher
@@ -14,7 +6,7 @@
 
 
 
-#define SSID        "Marlowe24"
+#define SSID        "hackmanhattan"
 #define PASS        "" // My luggage has the same combination!
 #define DEST_HOST   "retro.hackaday.com"
 #define DEST_IP     "192.254.235.21"

@@ -3,18 +3,14 @@
 This sketch uses hardware serial, so be sure to make the jumper connection as shown on 
 the board itself, or at wiki.aprbrother.com/wiki/Cactus_Micro
 
-// will work only with ESP8266 AT firmware 0.9.2.2 or higher
-// needs AltSoftSerial library for reliable comms http://www.pjrc.com/teensy/td_libs_AltSoftSerial.html
-
+// will work only with ESP8266 firmware 0.9.2.2 or higher
    
   Adapted from:
   'ESP8266 Retro Browser' - [TM] (http://hackaday.io/project/3072-esp8266-retro-browser)
   'Wifi meat thermometer' - bluesunit (http://www.reddit.com/r/arduino/comments/2kmgvg/wifi_meat_thermometer_with_trinket_esp8266/)
-
+  'Using a thermistor' - Lady Ada (https://learn.adafruit.com/thermistor/using-a-thermistor)
   David Reeves 2015
   CC NC-SA
-  
-
   
   
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -32,18 +28,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SSID        "hackmanhattan"
 #define PASS        ""      // My luggage has the same combination!
-#define DEST_HOST   "data.sparkfun.com"
+#define DEST_HOST   "insecure-groker.initialstate.com"
 #define TIMEOUT     5000    // mS
 #define CONTINUE    false
 #define HALT        true
-#define PUBLIC_KEY "MGgojzqpnaf3ydgDWQzA" //data.sparkfun.com public key
-#define PRIVATE_KEY "nz9ydg6kbmsVk1wKoX8W"      //data.sparkfun.com private key
+#define BUCKET_KEY "esp8266_4" //InitialState bucket key
+#define BUCKET_NAME "cactusTemp" //InitialState bucket name
+#define STREAM_KEY "dBV3uHArQF92BneXRlEykNlTZS279PVQ"      //InitialState private key
 #define RESET 13            // CH_PD pin
 #define GPIO0 5           // GPIO0
 #define RST 5              // RST
-#define SERIAL_IN 8        // Pin 8 connected to ESP8266 TX pin
-#define SERIAL_OUT 9       // Pin 9 connected to ESP8266 RX pin
 
+// which analog pin to connect
+#define THERMISTORPIN A0         
+// resistance at 25 degrees C
+#define THERMISTORNOMINAL 100000      
+// temp. for nominal resistance (almost always 25 C)
+#define TEMPERATURENOMINAL 25   
+// how many samples to take and average, more takes longer
+// but is more 'smooth'
+#define NUMSAMPLES 5
+// The beta coefficient of the thermistor (usually 3000-4000)
+#define BCOEFFICIENT 3950
+// the value of the 'other' resistor
+#define SERIESRESISTOR 180000    
+ 
+int samples[NUMSAMPLES];
+ 
 
 
 //#define ECHO_COMMANDS // Un-comment to echo AT+ commands to serial monitor
@@ -144,10 +155,13 @@ boolean connectService(String service, int port) {
 //  Handle connection errors
   if (!echoCommand(serviceConnect, "Linked", CONTINUE)) {          
     if (echoCommand(serviceConnect, "ALREAY CONNECT", CONTINUE)){
-      echoCommand("AT+CIPCLOSE", "", CONTINUE);
-      delay(2000);
+      return true;
     }
     if (echoCommand(serviceConnect, "busy p...", CONTINUE)) {
+      reset();
+      delay(5000);
+    }
+    if (echoCommand(serviceConnect, "ERROR", CONTINUE)) {
       reset();
       delay(5000);
     }
@@ -159,32 +173,31 @@ boolean connectService(String service, int port) {
  
 }
  
- 
-boolean addToStream(String temp) {
-
-  Serial.println(temp);
+boolean createBucket () {
 
   
-  if (!connectService("data.sparkfun.com",80)) return false;
+  while(!connectService(DEST_HOST,80)) {};
 
 // Get connection status 
   if (!echoCommand("AT+CIPSTATUS", "OK", CONTINUE)) return false;
 
  
 // Build HTTP request.
-  String toSend = "GET /input/" PUBLIC_KEY "?private_key=" PRIVATE_KEY;
-  toSend += "&temp_c=" + temp;  
-  //toSend += "&temp_f=" + temperature2_chr;
-  //toSend += "&temp_c2=" + c_temp2;
-  //toSend += "&temp_f2=" + f_temp2;
+  String toSend = "POST /api/buckets HTTP/1.1\r\n";
+  toSend +="Host: "DEST_HOST"\r\n" ;
+  toSend +="User-Agent:Arduino\r\n";
+  toSend +="Accept-Version: ~0\r\n";
+  toSend +="X-IS-AccessKey: "STREAM_KEY"\r\n";
+  toSend +="Content-Type: application/json\r\n";
+  String payload ="{\"bucketKey\": \""BUCKET_KEY "\","; 
+  payload +="\"bucketName\": \""BUCKET_NAME"\"}";
+  payload +="\r\n"; 
+  toSend += "Content-Length: "+String(payload.length())+"\r\n";
+  toSend += "\r\n";
+  toSend += payload;
   
-  toSend +=" HTTP/1.0\r\n\r\n";
-  //toSend += " HTTP/1.1\r\n\Host: ";
-  //toSend += DEST_HOST;
-  //toSend += "\r\n\r\n";
- 
-
-// Ready the module to receive raw data
+   Serial.println(toSend);
+ // Ready the module to receive raw data
   if (!echoCommand("AT+CIPSEND="+String(toSend.length()), ">", CONTINUE))
   {
     echoCommand("AT+CIPCLOSE", "", CONTINUE);
@@ -193,14 +206,64 @@ boolean addToStream(String temp) {
   }
   
 // Send the raw HTTP request
-  if(!echoCommand(toSend,"1 Success", CONTINUE)) return false;  // GET
+  if(!echoCommand(toSend,"20", CONTINUE)) return false;  // POST
   
-  Serial.println("Data posted!");
+  Serial.println("Bucket Created or Exists");
 
 //  echoCommand("AT+CIPCLOSE", "", CONTINUE);
    
   return true;
+} 
+ 
+ 
+boolean addToStream(String temp) {
+
+  Serial.println(temp);
+
+  
+  if (!connectService(DEST_HOST,80)) return false;
+
+// Get connection status 
+  if (!echoCommand("AT+CIPSTATUS", "OK", CONTINUE)) return false;
+
+ 
+// Build HTTP request.
+  String toSend = "POST /api/events HTTP/1.1\r\n";
+  toSend += "Host: "DEST_HOST"\r\n";
+  toSend +="Content-Type: application/json\r\n";
+  toSend +="User-Agent: Arduino\r\n";
+  toSend +="Accept-Version: ~0\r\n";
+  toSend +="X-IS-AccessKey:  " STREAM_KEY "\r\n";
+  toSend +="X-IS-BucketKey:  " BUCKET_KEY "\r\n";
+  String payload ="[{\"key\": \"TestA0\", "; 
+  payload +="\"value\": \"" + temp + "\"}]";
+  payload +="\r\n"; 
+  toSend += "Content-Length: "+String(payload.length())+"\r\n";
+  toSend += "\r\n";
+  toSend += payload;
+  
+  Serial.println(toSend);
+ // Ready the module to receive raw data
+  if (!echoCommand("AT+CIPSEND="+String(toSend.length()), ">", CONTINUE))
+  {
+    echoCommand("AT+CIPCLOSE", "", CONTINUE);
+    Serial.println("Connection timeout.");
+    return false;
+  }
+  
+// Send the raw HTTP request
+  if(!echoCommand(toSend,"204", CONTINUE)) return false;  // POST
+  
+  Serial.println("Data posted!");
+
+//  echoCommand("AT+CIPCLOSE", "", CONTINUE);
+     
+  return true;
 }
+
+
+
+
  
 String ftoa(float number, uint8_t precision, uint8_t size) {
   // Based on mem,  16.07.2008
@@ -262,14 +325,13 @@ void reset()
 }
 
 
-
 //                                         ******** SETUP ********
 void setup()  {
 
   Serial.begin(9600);         // Communication with PC monitor via USB
   Serial1.begin(9600);       // Communication with ESP8266 (3V3!)
   
-  Serial.println("ESP8266/Seeeduino DataLogger");
+  Serial.println("Cactus Micro/InitialState DataLogger");
 
   Serial.println("Enabling Module");
   
@@ -284,6 +346,7 @@ void setup()  {
   
   Serial.println("ESP8266 A0 Monitor");
   
+  reset();
   
   delay(5000);                             // wait for reset to complete
 
@@ -296,9 +359,8 @@ void setup()  {
   // Set up connection modes
   
   echoCommand("AT+GMR", "OK", CONTINUE);   // Retrieves the firmware ID (version number) of the module. 
-  echoCommand("AT+CWMODE?","OK", CONTINUE);// Get module access mode. 
-  echoCommand("AT+CWMODE=1", "", HALT);    // Station mode
-  echoCommand("AT+CIPMUX=0", "", HALT);    // Allow one connection
+  echoCommand("AT+CWMODE=3", "", HALT);    // Station mode
+  echoCommand("AT+CIPMUX=1", "", HALT);    // Allow one connection
 
   //connect to the wifi
   boolean connection_established = false;
@@ -307,6 +369,7 @@ void setup()  {
     if(connectWiFi())
     {
       connection_established = true;
+      delay(5000);
       break;
     }
   }
@@ -316,6 +379,7 @@ void setup()  {
 
   echoCommand("AT+CIFSR", "", HALT);           // Echo IP address. 
   
+  while (!createBucket()) {};
 }
 
 
@@ -328,7 +392,39 @@ void loop()
   delay(5000);
  
   float tempC;
-  tempC = analogRead(0);                  // Takes analog value from A0 pin
+ uint8_t i;
+  float average;
+ 
+  // take N samples in a row, with a slight delay
+  for (i=0; i< NUMSAMPLES; i++) {
+   samples[i] = analogRead(THERMISTORPIN);
+   delay(10);
+  }
+ 
+  // average all the samples out
+  average = 0;
+  for (i=0; i< NUMSAMPLES; i++) {
+     average += samples[i];
+  }
+  average /= NUMSAMPLES;
+ 
+  Serial.print("Average analog reading "); 
+  Serial.println(average);
+ 
+  // convert the value to resistance
+  average = 1023 / average - 1;
+  average = SERIESRESISTOR / average;
+  Serial.print("Thermistor resistance "); 
+  Serial.println(average);
+ 
+  float steinhart;
+  steinhart = average / THERMISTORNOMINAL;     // (R/Ro)
+  steinhart = log(steinhart);                  // ln(R/Ro)
+  steinhart /= BCOEFFICIENT;                   // 1/B * ln(R/Ro)
+  steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
+  steinhart = 1.0 / steinhart;                 // Invert
+  steinhart -= 273.15;                         // convert to C
+  tempC = steinhart;
   
   Serial.print(tempC);                    // Print Temperature to serial port
   Serial.println(" C, ");
@@ -338,8 +434,8 @@ void loop()
   // Construct output string   
 
   String temperature_str = "";                        //Celsius  
-  temperature_str += ftoa(tempC, 0, 3);
-  temperature_str += "C";
+  temperature_str += ftoa(tempC, 0, 4);
+  //temperature_str += "C";
   char temperature_chr[temperature_str.length()+1];   //create char buffer
   temperature_str.toCharArray(temperature_chr, temperature_str.length()+1); //convert to char
   
