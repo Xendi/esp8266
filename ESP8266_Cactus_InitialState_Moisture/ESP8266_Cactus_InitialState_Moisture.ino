@@ -33,33 +33,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TIMEOUT     5000    // mS
 #define CONTINUE    false
 #define HALT        true
-#define BUCKET_KEY "esp8266_6" //InitialState bucket key
-#define BUCKET_NAME "cactusTemp64" //InitialState bucket name
-#define STREAM_KEY "dBV3uHArQF92BneXRlEykNlTZS279PVQ"      //InitialState private key
+#define BUCKET_KEY "esp8266_8" //InitialState bucket key
+#define BUCKET_NAME "cactusMoisture" //InitialState bucket name
+#define STREAM_KEY ""      //InitialState private key
 #define RESET 13            // CH_PD pin
 #define GPIO0 5           // GPIO0
 #define RST 5              // RST
 
 
-// VCC---Series resistor (180K) ---A0---Thermistor (100K NTC)---GND
-
-// which analog pin to connect
-#define THERMISTORPIN A0         
-// resistance at 25 degrees C
-#define THERMISTORNOMINAL 100000      
-// temp. for nominal resistance (almost always 25 C)
-#define TEMPERATURENOMINAL 25   
-// how many samples to take and average, more takes longer
-// but is more 'smooth'
-#define NUMSAMPLES 5
-// The beta coefficient of the thermistor (usually 3000-4000)
-#define BCOEFFICIENT 3950
-// the value of the 'other' resistor
-#define SERIESRESISTOR 180000    
+// Grove Moisture Sensor v1.2 SIG on A0
  
-int samples[NUMSAMPLES];
- 
-
 
 //#define ECHO_COMMANDS // Un-comment to echo AT+ commands to serial monitor
 
@@ -239,7 +222,7 @@ boolean addToStream(String temp) {
   toSend +="Accept-Version: ~0\r\n";
   toSend +="X-IS-AccessKey:  " STREAM_KEY "\r\n";
   toSend +="X-IS-BucketKey:  " BUCKET_KEY "\r\n";
-  String payload ="[{\"key\": \"Temperature\", "; 
+  String payload ="[{\"key\": \"wet\", "; 
   payload +="\"value\": \"" + temp + "\"}]";
   payload +="\r\n"; 
   toSend += "Content-Length: "+String(payload.length())+"\r\n";
@@ -395,61 +378,29 @@ void loop()
   reset();                                // reset esp8266 each time around
   delay(5000);
  
-  float tempC;
- uint8_t i;
-  float average;
- 
-  // take N samples in a row, with a slight delay
-  for (i=0; i< NUMSAMPLES; i++) {
-   samples[i] = analogRead(THERMISTORPIN);
-   delay(10);
-  }
- 
-  // average all the samples out
-  average = 0;
-  for (i=0; i< NUMSAMPLES; i++) {
-     average += samples[i];
-  }
-  average /= NUMSAMPLES;
- 
-  Serial.print("Average analog reading "); 
-  Serial.println(average);
- 
-  // convert the value to resistance
-  average = 1023 / average - 1;
-  average = SERIESRESISTOR / average;
-  Serial.print("Thermistor resistance "); 
-  Serial.println(average);
- 
-  float steinhart;
-  steinhart = average / THERMISTORNOMINAL;     // (R/Ro)
-  steinhart = log(steinhart);                  // ln(R/Ro)
-  steinhart /= BCOEFFICIENT;                   // 1/B * ln(R/Ro)
-  steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
-  steinhart = 1.0 / steinhart;                 // Invert
-  steinhart -= 273.15;                         // convert to C
-  tempC = steinhart;
+  float wet;
+  wet = analogRead(A0);
   
-  Serial.print(tempC);                    // Print Temperature to serial port
-  Serial.println(" C, ");
+  Serial.print(wet);                    // Print Moisture to serial port
+
   delay(1000);  
   
     
   // Construct output string   
 
-  String temperature_str = "";                        //Celsius  
-  temperature_str += ftoa(tempC, 2, 5);
-  //temperature_str += "C";
-  char temperature_chr[temperature_str.length()+1];   //create char buffer
-  temperature_str.toCharArray(temperature_chr, temperature_str.length()+1); //convert to char
+  String wet_str = "";                        //Celsius  
+  wet_str += ftoa(wet, 0, 4);
+
+  char wet_chr[wet_str.length()+1];   //create char buffer
+  wet_str.toCharArray(wet_chr, wet_str.length()+1); //convert to char
   
 
   
   // Send Data to Internet
    
-  while(!addToStream(temperature_chr));   
+  while(!addToStream(wet_chr));   
 
-  delay(20000);
+  delay(50000);
  
 }
 
