@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define HALT        true
 #define BUCKET_KEY "esp8266_3" //InitialState bucket key
 #define BUCKET_NAME "cactustest3" //InitialState bucket name
-#define STREAM_KEY "dBV3uHArQF92BneXRlEykNlTZS279PVQ"      //InitialState private key
+#define STREAM_KEY "YOURSTREAMKEY"      //InitialState private key
 #define RESET 13            // CH_PD pin
 #define GPIO0 5           // GPIO0
 #define RST 5              // RST

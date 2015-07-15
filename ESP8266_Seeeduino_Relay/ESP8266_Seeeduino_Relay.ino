@@ -3,8 +3,7 @@
 // ESP8266:Arduino -> RST:5, GPIO0:6, CH_PD:7, UTXD:8, URXD:9
 
 // ESP8266 pinout (from above, antenna to right:
-// UTXD    GND
-// CH_PD   GPIO2
+// UTXD    GND// CH_PD   GPIO2
 // RST     GPIO0
 // VCC     URXD
 
@@ -64,8 +63,9 @@ void reset()
 //                                         ******** SETUP ********
 void setup()  {
 
-  Serial.begin(9600);         // Communication with PC monitor via USB
   mySerial.begin(9600);       // Communication with ESP8266 (3V3!)
+  Serial.begin(9600);         // Communication with PC monitor via USB
+
   
   Serial.println("ESP8266/Seeeduino Relay");
 
@@ -73,9 +73,9 @@ void setup()  {
   
 //  pinMode(RESET, OUTPUT);
 //  pinMode(RST, OUTPUT);
-//  pinMode(GPIO0, OUTPUT);
-  digitalWrite(RST, 1);       // Enable RST pin
+//  pinMode(GPIO0, INPUT);
   digitalWrite(GPIO0, 1);     // Enable GPIO1 pin to prevent bootloader mode
+  digitalWrite(RST, 1);       // Enable RST pin
   digitalWrite(RESET, 1);     // Enable CH_PD pin
   
 //  delay(2000);                // wait for chip enable
@@ -93,10 +93,11 @@ void setup()  {
 //                               ******** LOOP ********
 void loop() 
 {
+  if (mySerial.available() > 0) {char ch = mySerial.read(); Serial.print(ch);}
   
   if (Serial.available() > 0) {char ch = Serial.read(); mySerial.print(ch);}
   
-  if (mySerial.available() > 0) {char ch = mySerial.read(); Serial.print(ch);}
+
   
 }
 

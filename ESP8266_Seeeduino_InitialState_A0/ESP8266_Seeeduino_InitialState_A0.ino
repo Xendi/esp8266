@@ -1,17 +1,25 @@
-/* Cactus Micro with attached ESP8266 ESP-11 module.
+/* ESP8266 connected to Seeeduino in 3V3 mode
 
-This sketch uses hardware serial, so be sure to make the jumper connection as shown on 
-the board itself, or at wiki.aprbrother.com/wiki/Cactus_Micro
+// ESP8266:Arduino -> RST:5, GPIO0:6, CH_PD:7, UTXD:8, URXD:9
+
+// ESP8266 pinout (from above, antenna to right:
+// UTXD    GND
+// CH_PD   GPIO2
+// RST     GPIO0
+// VCC     URXD
 
 // will work only with ESP8266 firmware 0.9.2.2 or higher
-   
+// needs AltSoftSerial library for reliable comms http://www.pjrc.com/teensy/td_libs_AltSoftSerial.html
+
    
   Adapted from:
   'ESP8266 Retro Browser' - [TM] (http://hackaday.io/project/3072-esp8266-retro-browser)
   'Wifi meat thermometer' - bluesunit (http://www.reddit.com/r/arduino/comments/2kmgvg/wifi_meat_thermometer_with_trinket_esp8266/)
-  'Using a thermistor' - Lady Ada (https://learn.adafruit.com/thermistor/using-a-thermistor)
+
   David Reeves 2015
   CC NC-SA
+  
+
   
   
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -33,33 +41,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TIMEOUT     5000    // mS
 #define CONTINUE    false
 #define HALT        true
-#define BUCKET_KEY "esp8266_6" //InitialState bucket key
-#define BUCKET_NAME "cactusTemp64" //InitialState bucket name
-#define STREAM_KEY "YOURSTREAMKEY"      //InitialState private key
-#define RESET 13            // CH_PD pin
-#define GPIO0 5           // GPIO0
+#define BUCKET_KEY    "esp8266_10" //InitialState bucket key
+#define BUCKET_NAME    "Seeeduino" //InitialState bucket name
+#define STREAM_KEY    "YOURSTREAMKEY"      //InitialState private key
+#define RESET 7            // CH_PD pin
+#define GPIO0 6           // GPIO0
 #define RST 5              // RST
 
+#include <AltSoftSerial.h>
 
-// VCC---Series resistor (180K) ---A0---Thermistor (100K NTC)---GND
+AltSoftSerial mySerial;
 
-// which analog pin to connect
-#define THERMISTORPIN A0         
-// resistance at 25 degrees C
-#define THERMISTORNOMINAL 100000      
-// temp. for nominal resistance (almost always 25 C)
-#define TEMPERATURENOMINAL 25   
-// how many samples to take and average, more takes longer
-// but is more 'smooth'
-#define NUMSAMPLES 5
-// The beta coefficient of the thermistor (usually 3000-4000)
-#define BCOEFFICIENT 3950
-// the value of the 'other' resistor
-#define SERIESRESISTOR 180000    
+
+// Grove Moisture Sensor v1.2 SIG on A0
  
-int samples[NUMSAMPLES];
- 
-
 
 //#define ECHO_COMMANDS // Un-comment to echo AT+ commands to serial monitor
 
@@ -83,9 +78,9 @@ boolean echoFind(String keyword)
   unsigned long deadline = millis() + TIMEOUT;
   while(millis() < deadline)
   {
-    if (Serial1.available())
+    if (mySerial.available())
     {
-      char ch = Serial1.read();
+      char ch = mySerial.read();
       Serial.write(ch);
 
       if (ch == keyword[current_char])
@@ -102,7 +97,7 @@ boolean echoFind(String keyword)
 // Read and echo all available module output.
 // (Used when we're indifferent to "OK" vs. "no change" responses or to get around firmware bugs.)
 void echoFlush()
-  {while(Serial1.available()) Serial.write(Serial1.read());}
+  {while(mySerial.available()) Serial.write(mySerial.read());}
   
 // Echo module output until 3 newlines encountered.
 // (Used when we're indifferent to "OK" vs. "no change" responses.)
@@ -118,7 +113,7 @@ void echoSkip()
 // Echoes all data received to the serial monitor.
 boolean echoCommand(String cmd, String ack, boolean halt_on_fail)
 {
-  Serial1.println(cmd);
+  mySerial.println(cmd);
   #ifdef ECHO_COMMANDS
     Serial.print("--"); Serial.println(cmd);
   #endif
@@ -188,31 +183,34 @@ boolean createBucket () {
  
 // Build HTTP request.
   String toSend = "POST /api/buckets HTTP/1.1\r\n";
-  toSend +="Host: "DEST_HOST"\r\n" ;
+  if(!serialSend(toSend)) Serial.println("Send fail");
+
+  toSend ="Host: "DEST_HOST"\r\n" ;
   toSend +="User-Agent:Arduino\r\n";
   toSend +="Accept-Version: ~0\r\n";
-  toSend +="X-IS-AccessKey: "STREAM_KEY"\r\n";
-  toSend +="Content-Type: application/json\r\n";
+  if(!serialSend(toSend)) Serial.println("Send fail");
+
+  toSend ="X-IS-AccessKey: "STREAM_KEY"\r\n";
+  if(!serialSend(toSend)) Serial.println("Send fail");
+
+  toSend ="Content-Type: application/json\r\n";
+  if(!serialSend(toSend)) Serial.println("Send fail");
+
   String payload ="{\"bucketKey\": \""BUCKET_KEY "\","; 
   payload +="\"bucketName\": \""BUCKET_NAME"\"}";
   payload +="\r\n"; 
-  toSend += "Content-Length: "+String(payload.length())+"\r\n";
+  toSend = "Content-Length: "+String(payload.length())+"\r\n";
   toSend += "\r\n";
-  toSend += payload;
+  if(!serialSend(toSend)) Serial.println("Send fail");
+
+  toSend = payload;
+  if(!serialSend(toSend)) Serial.println("Send fail");
+
+   Serial.println(payload);
   
    Serial.println(toSend);
- // Ready the module to receive raw data
-  if (!echoCommand("AT+CIPSEND="+String(toSend.length()), ">", CONTINUE))
-  {
-    echoCommand("AT+CIPCLOSE", "", CONTINUE);
-    Serial.println("Connection timeout.");
-    return false;
-  }
   
-// Send the raw HTTP request
-  if(!echoCommand(toSend,"20", CONTINUE)) return false;  // POST
-  
-  Serial.println("Bucket Created or Exists");
+   Serial.println("Bucket Created or Exists");
 
 //  echoCommand("AT+CIPCLOSE", "", CONTINUE);
    
@@ -235,28 +233,29 @@ boolean addToStream(String temp) {
   String toSend = "POST /api/events HTTP/1.1\r\n";
   toSend += "Host: "DEST_HOST"\r\n";
   toSend +="Content-Type: application/json\r\n";
-  toSend +="User-Agent: Arduino\r\n";
+  
+  if(!serialSend(toSend)) Serial.println("Send fail");
+  
+  toSend ="User-Agent: Arduino\r\n";
   toSend +="Accept-Version: ~0\r\n";
-  toSend +="X-IS-AccessKey:  " STREAM_KEY "\r\n";
-  toSend +="X-IS-BucketKey:  " BUCKET_KEY "\r\n";
-  String payload ="[{\"key\": \"Temperature\", "; 
+  if(!serialSend(toSend)) Serial.println("Send fail");
+  
+  toSend ="X-IS-AccessKey:  " STREAM_KEY "\r\n";
+  if(!serialSend(toSend)) Serial.println("Send fail");
+
+  toSend ="X-IS-BucketKey:  " BUCKET_KEY "\r\n";
+  if(!serialSend(toSend)) Serial.println("Send fail");
+
+  String payload ="[{\"key\": \"A0\", "; 
   payload +="\"value\": \"" + temp + "\"}]";
   payload +="\r\n"; 
-  toSend += "Content-Length: "+String(payload.length())+"\r\n";
+  toSend = "Content-Length: "+String(payload.length())+"\r\n";
   toSend += "\r\n";
-  toSend += payload;
-  
-  Serial.println(toSend);
- // Ready the module to receive raw data
-  if (!echoCommand("AT+CIPSEND="+String(toSend.length()), ">", CONTINUE))
-  {
-    echoCommand("AT+CIPCLOSE", "", CONTINUE);
-    Serial.println("Connection timeout.");
-    return false;
-  }
-  
-// Send the raw HTTP request
-  if(!echoCommand(toSend,"204", CONTINUE)) return false;  // POST
+  if(!serialSend(toSend)) Serial.println("Send fail");
+
+  toSend = payload;
+  if(!serialSend(toSend)) Serial.println("Send fail");  
+
   
   Serial.println("Data posted!");
 
@@ -266,9 +265,20 @@ boolean addToStream(String temp) {
 }
 
 
+boolean serialSend(String txout) {
+  Serial.println(txout);
+ // Ready the module to receive raw data
+  if (!echoCommand("AT+CIPSEND="+String(txout.length()), ">", CONTINUE))
+  {
+    echoCommand("AT+CIPCLOSE", "", CONTINUE);
+    Serial.println("Connection timeout.");
+    return false;
+  }
+  // Send the raw HTTP request
+  if(!echoCommand(txout,"", CONTINUE)) return false;  // POST
+  return true;
+}
 
-
- 
 String ftoa(float number, uint8_t precision, uint8_t size) {
   // Based on mem,  16.07.2008
   // http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num = 1207226548/6#6
@@ -333,9 +343,9 @@ void reset()
 void setup()  {
 
   Serial.begin(9600);         // Communication with PC monitor via USB
-  Serial1.begin(9600);       // Communication with ESP8266 (3V3!)
+  mySerial.begin(9600);       // Communication with ESP8266 (3V3!)
   
-  Serial.println("Cactus Micro/InitialState DataLogger");
+  Serial.println("Seeeduino/InitialState DataLogger");
 
   Serial.println("Enabling Module");
   
@@ -395,61 +405,29 @@ void loop()
   reset();                                // reset esp8266 each time around
   delay(5000);
  
-  float tempC;
- uint8_t i;
-  float average;
- 
-  // take N samples in a row, with a slight delay
-  for (i=0; i< NUMSAMPLES; i++) {
-   samples[i] = analogRead(THERMISTORPIN);
-   delay(10);
-  }
- 
-  // average all the samples out
-  average = 0;
-  for (i=0; i< NUMSAMPLES; i++) {
-     average += samples[i];
-  }
-  average /= NUMSAMPLES;
- 
-  Serial.print("Average analog reading "); 
-  Serial.println(average);
- 
-  // convert the value to resistance
-  average = 1023 / average - 1;
-  average = SERIESRESISTOR / average;
-  Serial.print("Thermistor resistance "); 
-  Serial.println(average);
- 
-  float steinhart;
-  steinhart = average / THERMISTORNOMINAL;     // (R/Ro)
-  steinhart = log(steinhart);                  // ln(R/Ro)
-  steinhart /= BCOEFFICIENT;                   // 1/B * ln(R/Ro)
-  steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
-  steinhart = 1.0 / steinhart;                 // Invert
-  steinhart -= 273.15;                         // convert to C
-  tempC = steinhart;
+  float wet;
+  wet = analogRead(A0);
   
-  Serial.print(tempC);                    // Print Temperature to serial port
-  Serial.println(" C, ");
+  Serial.print(wet);                    // Print Moisture to serial port
+
   delay(1000);  
   
     
   // Construct output string   
 
-  String temperature_str = "";                        //Celsius  
-  temperature_str += ftoa(tempC, 2, 5);
-  //temperature_str += "C";
-  char temperature_chr[temperature_str.length()+1];   //create char buffer
-  temperature_str.toCharArray(temperature_chr, temperature_str.length()+1); //convert to char
+  String wet_str = "";                        //Celsius  
+  wet_str += ftoa(wet, 0, 4);
+
+  char wet_chr[wet_str.length()+1];   //create char buffer
+  wet_str.toCharArray(wet_chr, wet_str.length()+1); //convert to char
   
 
   
   // Send Data to Internet
    
-  while(!addToStream(temperature_chr));   
+  while(!addToStream(wet_chr));   
 
-  delay(20000);
+  delay(300000);
  
 }
 

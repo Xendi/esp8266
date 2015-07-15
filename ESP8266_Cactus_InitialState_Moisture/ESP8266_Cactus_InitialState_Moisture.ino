@@ -27,15 +27,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
 
-#define SSID        "hackmanhattan"
-#define PASS        ""      // My luggage has the same combination!
+#define SSID        "SSID"
+#define PASS        "PASS"      // My luggage has the same combination!
 #define DEST_HOST   "insecure-groker.initialstate.com"
 #define TIMEOUT     5000    // mS
 #define CONTINUE    false
 #define HALT        true
-#define BUCKET_KEY "esp8266_8" //InitialState bucket key
-#define BUCKET_NAME "cactusMoisture" //InitialState bucket name
-#define STREAM_KEY ""      //InitialState private key
+#define BUCKET_KEY "esp8266_12" //InitialState bucket key
+#define BUCKET_NAME "cactusMoistureHome" //InitialState bucket name
+#define STREAM_KEY "YOURSTREAMKEY"      //InitialState private key
 #define RESET 13            // CH_PD pin
 #define GPIO0 5           // GPIO0
 #define RST 5              // RST
@@ -222,7 +222,7 @@ boolean addToStream(String temp) {
   toSend +="Accept-Version: ~0\r\n";
   toSend +="X-IS-AccessKey:  " STREAM_KEY "\r\n";
   toSend +="X-IS-BucketKey:  " BUCKET_KEY "\r\n";
-  String payload ="[{\"key\": \"wet\", "; 
+  String payload ="[{\"key\": \"moisture\", "; 
   payload +="\"value\": \"" + temp + "\"}]";
   payload +="\r\n"; 
   toSend += "Content-Length: "+String(payload.length())+"\r\n";
@@ -400,7 +400,7 @@ void loop()
    
   while(!addToStream(wet_chr));   
 
-  delay(50000);
+  delay(300000);
  
 }
 
