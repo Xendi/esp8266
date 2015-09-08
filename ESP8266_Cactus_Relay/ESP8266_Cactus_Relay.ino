@@ -6,8 +6,8 @@
 
 
 
-#define SSID        "hackmanhattan"
-#define PASS        "" // My luggage has the same combination!
+#define SSID        "Bergen-Guest"
+#define PASS        "GuestDevice" // My luggage has the same combination!
 #define DEST_HOST   "retro.hackaday.com"
 #define DEST_IP     "192.254.235.21"
 #define TIMEOUT     5000 // mS

@@ -6,7 +6,7 @@
 
 
 
-#define SSID        "hackmanhattan"
+#define SSID        ""
 #define PASS        "" // My luggage has the same combination!
 #define DEST_HOST   "retro.hackaday.com"
 #define DEST_IP     "192.254.235.21"
@@ -14,7 +14,7 @@
 #define CONTINUE    false
 #define HALT        true
 #define RESET 13            // CH_PD pin
-#define GPIO0 5            // GPIO0
+#define GPIO0 12            // GPIO0
 #define RST 5              // RST
 #define SERIAL_IN 8        // Pin 8 connected to ESP8266 TX pin
 #define SERIAL_OUT 9       // Pin 9 connected to ESP8266 RX pin
@@ -29,7 +29,7 @@ void errorHalt(String msg)
 {
   Serial.println(msg);
   Serial.println("HALT");
-  while(true){};
+  while (true) {};
 }
 
 // Read characters from WiFi module and echo to serial until keyword occurs or timeout.
@@ -37,10 +37,10 @@ boolean echoFind(String keyword)
 {
   byte current_char   = 0;
   byte keyword_length = keyword.length();
-  
+
   // Fail if the target string has not been sent by deadline.
   long deadline = millis() + TIMEOUT;
-  while(millis() < deadline)
+  while (millis() < deadline)
   {
     if (Serial1.available())
     {
@@ -60,8 +60,10 @@ boolean echoFind(String keyword)
 // Read and echo all available module output.
 // (Used when we're indifferent to "OK" vs. "no change" responses or to get around firmware bugs.)
 void echoFlush()
-  {while(Serial1.available()) Serial.write(Serial1.read());}
-  
+{
+  while (Serial1.available()) Serial.write(Serial1.read());
+}
+
 // Echo module output until 3 newlines encountered.
 // (Used when we're indifferent to "OK" vs. "no change" responses.)
 void echoSkip()
@@ -77,18 +79,18 @@ void echoSkip()
 boolean echoCommand(String cmd, String ack, boolean halt_on_fail)
 {
   Serial1.println(cmd);
-  #ifdef ECHO_COMMANDS
-    Serial.print("--"); Serial.println(cmd);
-  #endif
-  
+#ifdef ECHO_COMMANDS
+  Serial.print("--"); Serial.println(cmd);
+#endif
+
   // If no ack response specified, skip all available module output.
   if (ack == "")
     echoSkip();
   else
     // Otherwise wait for ack.
-    if (!echoFind(ack))          // timed out waiting for ack string 
+    if (!echoFind(ack))          // timed out waiting for ack string
       if (halt_on_fail)
-        errorHalt(cmd+" failed");// Critical failure halt.
+        errorHalt(cmd + " failed"); // Critical failure halt.
       else
         return false;            // Let the caller handle it.
   return true;                   // ack blank or ack found
@@ -112,108 +114,110 @@ boolean connectWiFi()
 
 void reset()
 {
-  digitalWrite(RESET,LOW);
+  digitalWrite(RESET, LOW);
 
   delay(1000);
-  digitalWrite(RESET,HIGH);
+  digitalWrite(RESET, HIGH);
   delay(5000);
 }
 
 // ******** SETUP ********
-void setup()  
+void setup()
 {
   Serial.begin(9600);         // Communication with PC monitor via USB
   Serial1.begin(9600);        // Communication with ESP8266 (3V3!)
-  
+
   Serial.println("ESP8266 Demo");
 
   Serial.println("Enabling Module");
-  
+
   pinMode(RESET, OUTPUT);
   pinMode(RST, OUTPUT);
   pinMode(GPIO0, OUTPUT);
   digitalWrite(RST, 1);
   digitalWrite(GPIO0, 1);
-  
+
   reset();
-  
+
   echoCommand("AT+CSYSWDTENABLE", "WDT Enabled", HALT);
   delay(500);
-  
-//  Serial1.setTimeout(TIMEOUT);
-  
-  echoCommand("AT+RST", "ready", HALT);    // Reset & test if the module is ready  
+
+  //  Serial1.setTimeout(TIMEOUT);
+
+  echoCommand("AT+RST", "ready", HALT);    // Reset & test if the module is ready
   Serial.println("Module is ready.");
   delay(1000);
-  
-  echoCommand("AT+GMR", "OK", CONTINUE);   // Retrieves the firmware ID (version number) of the module. 
+
+  echoCommand("AT+GMR", "OK", CONTINUE);   // Retrieves the firmware ID (version number) of the module.
   delay(1000);
-  
-  echoCommand("AT+CWMODE?","OK", CONTINUE);// Get module access mode. 
+
+  echoCommand("AT+CWMODE?", "OK", CONTINUE); // Get module access mode.
   delay(1000);
-  
+
   echoCommand("AT+CWLAP", "OK", CONTINUE); // List available access points - DOESN't WORK FOR ME
   delay(1000);
-  
-  echoCommand("AT+CWMODE=1", "", HALT);    // Station mode
-  delay(1000);
-  
-  echoCommand("AT+CIPMUX=1", "", HALT);    // Allow multiple connections (we'll only use the first).
 
+  echoCommand("AT+CWMODE=3", "OK", HALT);    // Station mode
+  delay(1000);
+
+  echoCommand("AT+CIPCLOSE", "", CONTINUE);
+
+  echoCommand("AT+CIPMUX=1", "OK", HALT);    // Allow multiple connections (we'll only use the first).
+  delay(1000);
   //connect to the wifi
   boolean connection_established = false;
-  for(int i=0;i<5;i++)
+  for (int i = 0; i < 5; i++)
   {
-    if(connectWiFi())
+    if (connectWiFi())
     {
       connection_established = true;
       break;
     }
   }
   if (!connection_established) errorHalt("Connection failed");
-  
+
   delay(5000);
 
   //echoCommand("AT+CWSAP=?", "OK", CONTINUE); // Test connection
-  echoCommand("AT+CIFSR", "", HALT);         // Echo IP address. (Firmware bug - should return "OK".)
+  echoCommand("AT+CIFSR", "OK", HALT);         // Echo IP address. (Firmware bug - should return "OK".)
   //echoCommand("AT+CIPMUX=0", "", HALT);      // Set single connection mode
 }
 
 // ******** LOOP ********
-void loop() 
+void loop()
 {
-
+  
   // Establish TCP connection
-  String cmd = "AT+CIPSTART=0,\"TCP\",\""; cmd += DEST_IP; cmd += "\",80";
+  String cmd = "AT+CIPSTART=1,\"TCP\",\""; cmd += DEST_IP; cmd += "\",80";
   //  Handle connection errors
-  while (!echoCommand(cmd, "Linked", CONTINUE)) {          
+  while (!echoCommand(cmd, "OK", CONTINUE)) {
     reset();
     delay(5000);
-    
+
   }
-    
-  // Get connection status 
+
+  // Get connection status
   if (!echoCommand("AT+CIPSTATUS", "OK", CONTINUE)) return;
 
   // Build HTTP request.
   cmd = "GET / HTTP/1.1\r\nHost: "; cmd += DEST_HOST; cmd += ":80\r\n\r\n";
-  
+
   // Ready the module to receive raw data
-  if (!echoCommand("AT+CIPSEND=0,"+String(cmd.length()), ">", CONTINUE))
+  if (!echoCommand("AT+CIPSEND=1," + String(cmd.length()), ">", CONTINUE))
   {
     echoCommand("AT+CIPCLOSE", "", CONTINUE);
     Serial.println("Connection timeout.");
     return;
   }
-  
+
   // Send the raw HTTP request
   echoCommand(cmd, "OK", CONTINUE);  // GET
-  
+
   // Loop forever echoing data received from destination server.
-  while(true)
+  while (true)
     while (Serial1.available())
       Serial.write(Serial1.read());
-      
+
   errorHalt("ONCE ONLY");
 }
 
