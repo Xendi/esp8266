@@ -1,12 +1,11 @@
-// Cactus Micro with ESP-11. Set jumper for hardware serial!
+// Cactus Micro v2 with ESP-11. Set jumper for hardware serial!
 
 // modified from code by TM at http://hackaday.io/project/3072-esp8266-retro-browser
 // will work only with ESP8266 firmware 0.9.2.2 or higher
-// needs AltSoftSerial library for reliable comms http://www.pjrc.com/teensy/td_libs_AltSoftSerial.html
 
 
 
-#define SSID        ""
+#define SSID        "hackmanhattan"
 #define PASS        "" // My luggage has the same combination!
 #define DEST_HOST   "retro.hackaday.com"
 #define DEST_IP     "192.254.235.21"
